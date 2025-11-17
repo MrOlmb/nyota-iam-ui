@@ -1,0 +1,172 @@
+<!-- Modal Backdrop -->
+<div *ngIf="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
+  <!-- Backdrop overlay -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" (click)="close()"></div>
+
+  <!-- Modal content -->
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b">
+        <h3 class="text-xl font-semibold text-gray-900">
+          {{ isEditMode ? 'Edit Role' : 'Create New Role' }}
+        </h3>
+        <button
+          type="button"
+          (click)="close()"
+          class="text-gray-400 hover:text-gray-600 transition"
+        >
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="mx-6 mt-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Modal Body -->
+      <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Code -->
+          <div>
+            <label class="label">Role Code *</label>
+            <input
+              type="text"
+              formControlName="code"
+              class="input uppercase"
+              [class.border-red-500]="f['code'].invalid && f['code'].touched"
+              [class.bg-gray-100]="isEditMode"
+              placeholder="ROLE_CODE"
+            />
+            <p *ngIf="f['code'].invalid && f['code'].touched" class="mt-1 text-xs text-red-600">
+              Code is required (uppercase letters, numbers, underscores only)
+            </p>
+            <p *ngIf="!isEditMode" class="mt-1 text-xs text-gray-500">
+              Use uppercase with underscores (e.g., SCHOOL_ADMIN)
+            </p>
+          </div>
+
+          <!-- Scope -->
+          <div>
+            <label class="label">Scope *</label>
+            <select
+              formControlName="scope"
+              class="input"
+              [class.border-red-500]="f['scope'].invalid && f['scope'].touched"
+              [class.bg-gray-100]="isEditMode"
+            >
+              <option *ngFor="let scope of scopes" [value]="scope.value">
+                {{ scope.label }}
+              </option>
+            </select>
+            <p *ngIf="f['scope'].invalid && f['scope'].touched" class="mt-1 text-xs text-red-600">
+              Scope is required
+            </p>
+          </div>
+
+          <!-- Name -->
+          <div class="md:col-span-2">
+            <label class="label">Role Name *</label>
+            <input
+              type="text"
+              formControlName="name"
+              class="input"
+              [class.border-red-500]="f['name'].invalid && f['name'].touched"
+              placeholder="School Administrator"
+            />
+            <p *ngIf="f['name'].invalid && f['name'].touched" class="mt-1 text-xs text-red-600">
+              Name is required (min 3 characters)
+            </p>
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <label class="label">Description</label>
+            <textarea
+              formControlName="description"
+              class="input"
+              rows="3"
+              placeholder="Role description and responsibilities..."
+            ></textarea>
+          </div>
+
+          <!-- Context IDs (conditional based on scope) -->
+          <div *ngIf="roleForm.value.scope === 'TENANT'">
+            <label class="label">Ministry/Region ID</label>
+            <input
+              type="text"
+              formControlName="tenant_id"
+              class="input"
+              placeholder="Optional tenant ID"
+            />
+          </div>
+
+          <div *ngIf="roleForm.value.scope === 'OU'">
+            <label class="label">School/Department ID</label>
+            <input
+              type="text"
+              formControlName="ou_id"
+              class="input"
+              placeholder="Optional OU ID"
+            />
+          </div>
+
+          <div *ngIf="roleForm.value.scope === 'SITE'">
+            <label class="label">Campus/Building ID</label>
+            <input
+              type="text"
+              formControlName="site_id"
+              class="input"
+              placeholder="Optional site ID"
+            />
+          </div>
+
+          <!-- Is Assignable -->
+          <div class="md:col-span-2">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="is_assignable"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700">
+                This role can be assigned to users
+              </span>
+            </label>
+            <p class="mt-1 text-xs text-gray-500">
+              System roles and templates may not be assignable
+            </p>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-3 mt-6 pt-6 border-t">
+          <button
+            type="button"
+            (click)="close()"
+            class="btn btn-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="isLoading"
+          >
+            <span *ngIf="!isLoading">{{ isEditMode ? 'Update Role' : 'Create Role' }}</span>
+            <span *ngIf="isLoading" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isEditMode ? 'Updating...' : 'Creating...' }}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
