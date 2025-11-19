@@ -8,7 +8,9 @@ export interface User {
     middle_name?: string;
     phone?: string;
     phone_verified: boolean;
+    is_active: boolean;
     status: UserStatus;
+    last_login?: string;
     created_at: string;
     updated_at: string;
   }

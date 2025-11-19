@@ -1,51 +1,185 @@
-<div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+<div class="h-full">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+    <p class="text-sm text-gray-500 mt-1">Welcome to NYOTA IAM Admin</p>
+  </div>
 
-    <app-loading-spinner *ngIf="isLoading" size="lg"></app-loading-spinner>
+  <!-- Loading State -->
+  <app-loading-spinner *ngIf="isLoading" size="lg"></app-loading-spinner>
 
-    <!-- Error State -->
-    <div *ngIf="!isLoading && hasError" class="card bg-yellow-50 border border-yellow-200">
-      <div class="flex items-start">
-        <div class="flex-shrink-0">
-          <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-yellow-800">Data Unavailable</h3>
-          <p class="mt-1 text-sm text-yellow-700">{{ errorMessage }}</p>
-          <p class="mt-2 text-xs text-yellow-600">Please ensure the backend API endpoints are implemented and running.</p>
-        </div>
+  <!-- Error State -->
+  <div
+    *ngIf="!isLoading && hasError"
+    class="card bg-yellow-50 border border-yellow-200"
+  >
+    <div class="flex items-start">
+      <div class="flex-shrink-0">
+        <svg
+          class="h-6 w-6 text-yellow-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
       </div>
-    </div>
-
-    <div *ngIf="!isLoading && !hasError" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <div class="card">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <svg class="h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Users</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ totalUsers }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <svg class="h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Roles</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ totalRoles }}</p>
-          </div>
-        </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-yellow-800">Data Unavailable</h3>
+        <p class="mt-1 text-sm text-yellow-700">{{ errorMessage }}</p>
+        <p class="mt-2 text-xs text-yellow-600">
+          Please ensure the backend API endpoints are implemented and running.
+        </p>
       </div>
     </div>
   </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && !hasError">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+      <div
+        *ngFor="let card of statCards"
+        (click)="navigateToCard(card)"
+        class="card hover:shadow-lg transition-all duration-200"
+        [class.cursor-pointer]="card.route"
+        [class.hover:border-primary-300]="card.route"
+      >
+        <div class="flex items-center justify-between">
+          <!-- Icon and Title -->
+          <div class="flex-1">
+            <div class="flex items-center mb-3">
+              <div
+                class="flex items-center justify-center w-12 h-12 rounded-lg"
+                [ngClass]="card.iconBgClass"
+              >
+                <ng-icon
+                  [name]="card.icon"
+                  size="24"
+                  [ngClass]="card.iconColorClass"
+                />
+              </div>
+            </div>
+            <p class="text-sm font-medium text-gray-500 mb-1">
+              {{ card.title }}
+            </p>
+            <p class="text-3xl font-bold text-gray-900">
+              {{ card.value | number }}
+            </p>
+
+            <!-- Change Indicator -->
+            <div *ngIf="card.change !== undefined" class="flex items-center mt-2">
+              <ng-icon
+                *ngIf="card.change > 0"
+                name="lucideArrowUpRight"
+                size="16"
+                class="text-green-600 mr-1"
+              />
+              <ng-icon
+                *ngIf="card.change < 0"
+                name="lucideArrowDownRight"
+                size="16"
+                class="text-red-600 mr-1"
+              />
+              <span
+                class="text-sm font-medium"
+                [class.text-green-600]="card.change > 0"
+                [class.text-red-600]="card.change < 0"
+                [class.text-gray-600]="card.change === 0"
+              >
+                {{ card.change > 0 ? '+' : '' }}{{ card.change }}%
+              </span>
+              <span class="text-sm text-gray-500 ml-1">{{ card.changeLabel }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="card p-0 overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Recent Activity</h2>
+          <p class="text-sm text-gray-500 mt-1">Latest actions across your system</p>
+        </div>
+        <button
+          (click)="viewAllActivity()"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+        >
+          View All
+          <ng-icon name="lucideArrowUpRight" size="16" class="ml-1" />
+        </button>
+      </div>
+
+      <!-- Activity List -->
+      <div class="divide-y divide-gray-200">
+        <div
+          *ngFor="let activity of recentActivity"
+          class="px-6 py-4 hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <!-- Action and User -->
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [ngClass]="getActionClass(activity.action)"
+                >
+                  {{ activity.action }}
+                </span>
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [ngClass]="getStatusClass(activity.status)"
+                >
+                  {{ activity.status }}
+                </span>
+              </div>
+
+              <!-- Description -->
+              <p class="text-sm text-gray-900 mb-1">
+                {{ activity.description }}
+              </p>
+
+              <!-- Meta Info -->
+              <div class="flex items-center gap-3 text-xs text-gray-500">
+                <span class="flex items-center">
+                  <ng-icon name="lucideUsers" size="14" class="mr-1" />
+                  {{ getUserName(activity.user_id || '') }}
+                </span>
+                <span *ngIf="activity.ip_address" class="flex items-center font-mono">
+                  {{ activity.ip_address }}
+                </span>
+                <span *ngIf="activity.resource_type" class="flex items-center">
+                  {{ activity.resource_type }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Timestamp -->
+            <div class="ml-4 flex-shrink-0 flex items-center text-xs text-gray-500">
+              <ng-icon name="lucideClock" size="14" class="mr-1" />
+              {{ formatTime(activity.occurred_at) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        *ngIf="recentActivity.length === 0"
+        class="px-6 py-12 text-center"
+      >
+        <ng-icon name="lucideActivity" size="48" class="text-gray-400 mx-auto mb-3" />
+        <h3 class="text-sm font-medium text-gray-900 mb-1">No recent activity</h3>
+        <p class="text-sm text-gray-500">Activity will appear here as users interact with the system.</p>
+      </div>
+    </div>
+  </div>
+</div>

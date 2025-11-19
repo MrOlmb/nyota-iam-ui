@@ -38,6 +38,18 @@ export const routes: Routes = [
       {
         path: 'audit',
         loadComponent: () => import('./pages/audit/audit.component').then(m => m.AuditComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent)
+      },
+      {
+        path: 'organizations',
+        loadComponent: () => import('./pages/organizations/organizations.component').then(m => m.OrganizationsComponent)
+      },
+      {
+        path: 'help',
+        loadComponent: () => import('./pages/help/help.component').then(m => m.HelpComponent)
       }
     ]
   },

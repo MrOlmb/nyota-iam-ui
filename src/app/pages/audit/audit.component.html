@@ -1,38 +1,329 @@
-<div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Audit Logs</h1>
-  
-    <app-loading-spinner *ngIf="isLoading" size="lg"></app-loading-spinner>
-  
-    <div *ngIf="!isLoading" class="card overflow-hidden p-0">
+<div class="h-full">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Audit Logs</h1>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b border-gray-200 mb-6">
+    <nav class="-mb-px flex space-x-8">
+      <button
+        (click)="onTabChange('overview')"
+        [class.border-primary-600]="activeTab() === 'overview'"
+        [class.text-primary-600]="activeTab() === 'overview'"
+        [class.border-transparent]="activeTab() !== 'overview'"
+        [class.text-gray-500]="activeTab() !== 'overview'"
+        class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium hover:text-gray-700 hover:border-gray-300 transition-colors"
+      >
+        Overview
+      </button>
+      <button
+        (click)="onTabChange('logs')"
+        [class.border-primary-600]="activeTab() === 'logs'"
+        [class.text-primary-600]="activeTab() === 'logs'"
+        [class.border-transparent]="activeTab() !== 'logs'"
+        [class.text-gray-500]="activeTab() !== 'logs'"
+        class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium hover:text-gray-700 hover:border-gray-300 transition-colors"
+      >
+        Logs
+      </button>
+    </nav>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="flex items-center gap-3 mb-6">
+    <!-- Date Range Filter -->
+    <div class="relative">
+      <button
+        (click)="toggleDateDropdown()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      >
+        <ng-icon name="lucideCalendar" size="18" class="mr-2" />
+        {{ getDateRangeLabel() }}
+        <ng-icon name="lucideChevronDown" size="16" class="ml-2" />
+      </button>
+
+      <!-- Date Dropdown -->
+      <div
+        *ngIf="isDateDropdownOpen()"
+        class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+      >
+        <div class="py-1">
+          <button
+            *ngFor="let option of dateRangeOptions"
+            (click)="selectDateRange(option.value)"
+            class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            [class.bg-primary-50]="selectedDateRange() === option.value"
+            [class.text-primary-600]="selectedDateRange() === option.value"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Filter -->
+    <div class="relative">
+      <button
+        (click)="toggleUserFilter()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        [class.border-primary-600]="selectedUsers().length > 0"
+        [class.text-primary-600]="selectedUsers().length > 0"
+      >
+        <ng-icon name="lucideUser" size="18" class="mr-2" />
+        Users
+        <span
+          *ngIf="selectedUsers().length > 0"
+          class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-primary-600 rounded-full"
+        >
+          {{ selectedUsers().length }}
+        </span>
+        <ng-icon name="lucideChevronDown" size="16" class="ml-2" />
+      </button>
+
+      <!-- User Filter Dropdown -->
+      <div
+        *ngIf="isUserFilterOpen()"
+        class="absolute z-10 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+      >
+        <div class="p-2">
+          <div class="text-xs font-medium text-gray-500 px-2 py-1">FILTER BY</div>
+          <div class="max-h-64 overflow-y-auto">
+            <label
+              *ngFor="let option of userOptions"
+              class="flex items-center px-2 py-2 hover:bg-gray-50 rounded cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                [checked]="selectedUsers().includes(option.value)"
+                (change)="toggleUserSelection(option.value)"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700">{{ option.label }}</span>
+              <span *ngIf="option.count" class="ml-auto text-xs text-gray-500"
+                >({{ option.count }})</span
+              >
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Filter -->
+    <div class="relative">
+      <button
+        (click)="toggleActionFilter()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        [class.border-primary-600]="selectedActions().length > 0"
+        [class.text-primary-600]="selectedActions().length > 0"
+      >
+        <ng-icon name="lucideActivity" size="18" class="mr-2" />
+        Actions
+        <span
+          *ngIf="selectedActions().length > 0"
+          class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-primary-600 rounded-full"
+        >
+          {{ selectedActions().length }}
+        </span>
+        <ng-icon name="lucideChevronDown" size="16" class="ml-2" />
+      </button>
+
+      <!-- Action Filter Dropdown -->
+      <div
+        *ngIf="isActionFilterOpen()"
+        class="absolute z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+      >
+        <div class="p-2">
+          <div class="text-xs font-medium text-gray-500 px-2 py-1">FILTER BY</div>
+          <div class="max-h-64 overflow-y-auto">
+            <label
+              *ngFor="let option of actionOptions"
+              class="flex items-center px-2 py-2 hover:bg-gray-50 rounded cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                [checked]="selectedActions().includes(option.value)"
+                (change)="toggleActionSelection(option.value)"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700">{{ option.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clear Filters -->
+    <button
+      *ngIf="hasActiveFilters()"
+      (click)="clearFilters()"
+      class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+    >
+      <ng-icon name="lucideX" size="16" class="mr-1" />
+      Clear filters
+    </button>
+
+    <!-- Spacer -->
+    <div class="flex-1"></div>
+
+    <!-- Export Button -->
+    <button
+      class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+    >
+      <ng-icon name="lucideDownload" size="18" class="mr-2" />
+      Export
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <app-loading-spinner *ngIf="isLoading" size="lg"></app-loading-spinner>
+
+  <!-- Empty State (no data for selected period) -->
+  <div
+    *ngIf="!isLoading && filteredLogs.length === 0"
+    class="card text-center py-16"
+  >
+    <div class="mx-auto h-16 w-16 text-gray-400 mb-4">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 mb-1">
+      No data for the selected period
+    </h3>
+    <p class="text-sm text-gray-500 mb-4">
+      Try choosing a different time period in the calendar.
+    </p>
+    <button
+      *ngIf="hasActiveFilters()"
+      (click)="clearFilters()"
+      class="btn btn-primary btn-sm"
+    >
+      Clear all filters
+    </button>
+  </div>
+
+  <!-- Audit Logs Table -->
+  <div
+    *ngIf="!isLoading && filteredLogs.length > 0"
+    class="card overflow-hidden p-0"
+  >
+    <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resource</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Timestamp
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              User
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Action
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Resource
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Description
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              IP Address
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr *ngFor="let log of logs">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDateTime(log.occurred_at) }}</td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ log.action }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ log.resource_type }}</td>
+          <tr
+            *ngFor="let log of filteredLogs"
+            class="hover:bg-gray-50 transition-colors"
+          >
+            <!-- Timestamp -->
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ formatDateTime(log.occurred_at) }}
+            </td>
+
+            <!-- User -->
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getStatusClass(log.status)">
+              <div class="text-sm font-medium text-gray-900">
+                {{ getUserName(log.user_id || '') }}
+              </div>
+              <div class="text-sm text-gray-500 font-mono">{{ log.user_id }}</div>
+            </td>
+
+            <!-- Action -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="getActionClass(log.action)"
+              >
+                {{ log.action }}
+              </span>
+            </td>
+
+            <!-- Resource -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ log.resource_type }}</div>
+              <div *ngIf="log.resource_id" class="text-sm text-gray-500 font-mono">
+                {{ log.resource_id }}
+              </div>
+            </td>
+
+            <!-- Description -->
+            <td class="px-6 py-4">
+              <div class="text-sm text-gray-900 max-w-md truncate">
+                {{ log.description || '-' }}
+              </div>
+            </td>
+
+            <!-- IP Address -->
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
+              {{ log.ip_address || '-' }}
+            </td>
+
+            <!-- Status -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="getStatusClass(log.status)"
+              >
                 {{ log.status }}
               </span>
             </td>
           </tr>
         </tbody>
       </table>
-  
-      <app-pagination
-        [currentPage]="currentPage"
-        [totalPages]="totalPages"
-        [hasNext]="hasNext"
-        [hasPrev]="hasPrev"
-        (pageChange)="onPageChange($event)"
-      ></app-pagination>
     </div>
+
+    <!-- Pagination -->
+    <app-pagination
+      *ngIf="totalPages > 1"
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [hasNext]="hasNext"
+      [hasPrev]="hasPrev"
+      (pageChange)="onPageChange($event)"
+    ></app-pagination>
   </div>
+</div>

@@ -1,0 +1,132 @@
+<aside
+  class="sidebar-container"
+  [class.collapsed]="isCollapsed()"
+  [attr.data-collapsed]="isCollapsed()"
+>
+  <!-- Header Section -->
+  <div
+    class="flex h-16 items-center justify-between border-b border-sidebar-border px-4"
+  >
+    <div class="flex items-center gap-2" *ngIf="!isCollapsed()">
+      <h1 class="text-lg font-bold text-sidebar-primary">NYOTA IAM</h1>
+    </div>
+    <button
+      (click)="toggleSidebar()"
+      class="rounded-md p-2 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+      [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    >
+      <ng-icon
+        [name]="isCollapsed() ? 'lucideChevronRight' : 'lucideChevronLeft'"
+        size="20"
+      />
+    </button>
+  </div>
+
+  <!-- Navigation Section -->
+  <nav class="flex-1 overflow-y-auto p-4">
+    <ul class="space-y-1">
+      <li *ngFor="let item of navItems">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.route === '/' }"
+          class="sidebar-menu-button"
+          [attr.title]="isCollapsed() ? item.name : null"
+        >
+          <ng-icon [name]="item.icon" size="20" class="flex-shrink-0" />
+          <span *ngIf="!isCollapsed()">{{ item.name }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Footer Section with User Profile -->
+  <div
+    class="border-t border-sidebar-border"
+    *ngIf="currentUser$ | async as user"
+  >
+    <div class="relative p-4">
+      <button
+        (click)="toggleDropdown()"
+        class="flex w-full items-center gap-3 rounded-md p-2 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        [attr.aria-expanded]="isDropdownOpen()"
+        [attr.title]="isCollapsed() ? user.username : null"
+      >
+        <!-- Avatar -->
+        <div
+          class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white"
+        >
+          {{ getUserInitials(user) }}
+        </div>
+
+        <!-- User Info (visible when expanded) -->
+        <div *ngIf="!isCollapsed()" class="flex-1 text-left">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <p class="truncate text-sm font-medium text-sidebar-primary">
+                {{ user.first_name }} {{ user.last_name }}
+              </p>
+              <p class="truncate text-xs text-sidebar-foreground">
+                {{ user.email }}
+              </p>
+              <span
+                class="mt-1 inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-800"
+              >
+                {{ getUserRole(user) }}
+              </span>
+            </div>
+            <ng-icon
+              name="lucideChevronDown"
+              size="16"
+              class="flex-shrink-0 transition-transform"
+              [class.rotate-180]="isDropdownOpen()"
+            />
+          </div>
+        </div>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div
+        *ngIf="isDropdownOpen()"
+        class="absolute bottom-full left-4 right-4 mb-2 rounded-md border border-sidebar-border bg-sidebar-background shadow-lg"
+        [class.left-4]="!isCollapsed()"
+        [class.right-4]="!isCollapsed()"
+        [class.left-2]="isCollapsed()"
+        [class.right-2]="isCollapsed()"
+      >
+        <ul class="py-1">
+          <li *ngFor="let item of dropdownItems; let i = index">
+            <hr
+              *ngIf="item.divider && i > 0"
+              class="my-1 border-sidebar-border"
+            />
+            <button
+              (click)="handleDropdownItemClick(item)"
+              class="flex w-full items-center gap-3 px-4 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:bg-sidebar-accent"
+            >
+              <ng-icon [name]="item.icon" size="16" class="flex-shrink-0" />
+              <span>{{ item.name }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallback when no user is logged in -->
+  <div
+    class="border-t border-sidebar-border p-4"
+    *ngIf="!(currentUser$ | async)"
+  >
+    <div class="flex items-center gap-3">
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300"
+      >
+        <ng-icon name="lucideUser" size="20" class="text-gray-600" />
+      </div>
+      <div *ngIf="!isCollapsed()">
+        <p class="text-sm text-gray-600">Not logged in</p>
+      </div>
+    </div>
+  </div>
+</aside>
